@@ -10,7 +10,7 @@ from collections import Counter
 
 
 def loadDataSet():
-    url = "file:///C:/Users/Luciano/Documents/pdg/agosto21comaFinal.csv"
+    url = "./dataSet.csv"
     column_names = ['id',
                     'invoice',
                     'itemId',
@@ -140,7 +140,7 @@ def loadFakesNames(data):
     return data
 
 def loadNames():
-    url = "file:///C:/Users/Luciano/.spyder-py3/autosave/PDG/names.csv"
+    url = "./names.csv"
     column_names = ['name'
                     ]
     data = pd.read_csv(

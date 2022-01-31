@@ -32,7 +32,6 @@ from keras.wrappers.scikit_learn import KerasRegressor
 """# **Importing Datasets**"""
 from sklearn.model_selection import train_test_split 
 from collections import Counter
-#data.to_csv('./datasets/final_data.csv')
 
 def calculateWeek(date):
     years= date.dt.strftime('%Y').astype(int) - 2009
@@ -596,7 +595,7 @@ info.viewResultRegressionByOrder(result, labels, False)
 ## NEEEEEEEEEEEEEEEW DATA
 ## Utilizamos  los Códigos de los paises obtenidos de la ISO
 def loadDataSet():
-    url = "file:///C:/Users/Luciano/Documents/pdg/wikipedia-iso-country-codes.csv"
+    url = "./country-codes.csv"
     column_names = ['name',
                     'null',
                     'null2',

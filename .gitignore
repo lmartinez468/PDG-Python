@@ -1,2 +1,4 @@
 # Ignora los Archivos generados
 *.csv
+
+__pycache__/*
