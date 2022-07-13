@@ -25,13 +25,14 @@ from sklearn.preprocessing import MinMaxScaler
 
 from sklearn.ensemble import RandomForestRegressor
 
-from keras.models import Sequential
-from keras.layers import Dense
-from keras.wrappers.scikit_learn import KerasRegressor
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense
+from tensorflow.keras.wrappers.scikit_learn import KerasRegressor
 
-"""# **Importing Datasets**"""
 from sklearn.model_selection import train_test_split 
 from collections import Counter
+from compareModels import compareAllModels
+import joblib
 
 def calculateWeek(date):
     years= date.dt.strftime('%Y').astype(int) - 2009
@@ -46,7 +47,7 @@ class Data(object):
         self.x_test = x_test
         self.y_train = y_train
         self.y_test = y_test
-        self.y_test 
+        self.y_test_pred 
         
 
 
@@ -132,13 +133,15 @@ cohort_sizes = cohortToPlot.iloc[:,0]
 cohortToPlot = cohortToPlot.divide(cohort_sizes, axis=0)
 
 # Redondeo los datos a tres digitos y multiplicamos por 100 para obtener el resultado porcentual.
-cohortToPlot =cohortToPlot.round(3) * 100
-
+cohortToPlot =cohortToPlot.round(3)
 
 # Graficamos
+plt.clf()
+plt.cla()
+plt.style.use('default')
 plt.figure(figsize=(30, 8))
 plt.title('Ratio de usuarios que vuelven a comprar')
-sns.heatmap(data = cohortToPlot,annot = True,fmt = '.0%',vmin = 0.0,vmax = 0.5,cmap = 'BuGn')
+sns.heatmap(data = cohortToPlot,annot = True,fmt = '.0%',vmin = 0.0,vmax = 1,cmap = 'BuGn')
 plt.show()
 
 ## TODO Sacar un analisis del cohortToPlot !!!!!!!!!!!!!!!!!!!
@@ -682,7 +685,7 @@ df= df.sort_index()
 #df['orders'] = 1
 #df= df.groupby('invoiceDate').agg({"totalValue": 'sum', 'products': 'sum', "orders": 'sum'})
 df['date']= df.index
-df['week']= calculateWeek(df.date)
+df['week']= helpers.calculateWeek(df.date)
 
 countries = df[['country']]
 ## TODO Operación muy lenta, verificar como mejorar
@@ -714,10 +717,10 @@ value = ['totalValue']
 ## predecir todos clientes **********************************************
 ## R2 0.41860542944866796
 modelCreated, history, data = regressionModel.runPrediction(df, features, value)
-
+#joblib.dump(logreg, "./modelTrained/regressionModel.joblib")
 data.y_pred = modelCreated.predict(data.x_test)
 
-info.modelLoss(history, data)
+info.modelLoss(data, history)
 info.show100Prediction(data)
 info.comparePredictionWithOrders(data)
 info.compare100PredictionWithOrders(data)
@@ -728,7 +731,7 @@ modelCreated2, history2, data2 = regressionModel.runPrediction(df[df.customerId 
 
 data2.y_pred = modelCreated2.predict(data2.x_test)
 
-info.modelLoss(history2, data2)
+info.modelLoss(data, history)
 info.show100Prediction(data2)
 info.showAllPrediction(data2)
 info.comparePredictionWithOrders(data2)
@@ -770,11 +773,25 @@ bestProduct = dataSet.groupby(dataSet.itemId.tolist(), as_index=False, dropna=Fa
 bestProduct = bestProduct.sort_values('quantity', ascending=False)[0:20]
 ##bestProduct.to_csv('bestProduct.csv')
 
+## Repetimos los productos mas vendidos pero del ultimo més.
+bestProductLastMonth= dataSet[dataSet.invoiceDate > datetime(2011,11,1)]
+bestProductLastMonth= bestProductLastMonth.groupby(bestProductLastMonth.itemId.tolist(), as_index=False, dropna=False).size().rename(columns={'index':'itemId', 'size': 'quantity'})
+bestProductLastMonth = bestProductLastMonth.sort_values('quantity', ascending=False)[0:20]
+
+#bestProductLastMonth.to_csv('bestProductLastMonth.csv')
+
 ## Exportamos una tabla con las caracteristicas de cada producto.
 helpers.exportItemsDetails(dataSet)
 
 
+predictionProducts = dataSet
+predictionProducts
+predictionProducts.invoiceDate = predictionProducts.invoiceDate.apply(lambda x: datetime(x.year, x.month, 1))
+predictionProducts = predictionProducts[predictionProducts.itemId =="85123A"]
+predictionProducts = predictionProducts[predictionProducts.quantity > 0]
 
+resultPrediction = predictionProducts.groupby('invoiceDate').agg({'quantity': "sum"})
+info.showXY(resultPrediction.quantity.values, resultPrediction.index)
 ## copia de predicción pero para solo 1 usuario
 ## ***********************************************************************************************
 14911
@@ -805,3 +822,4 @@ helpers.exportItemsDetails(dataSet)
 #14#Productos con proyección(prometedores)
 #15#Productos en descenso (desapareciendo)
 #16#Productos muertos (sin ventas en los ultimos 3 meses)
+#compareAllModels()
